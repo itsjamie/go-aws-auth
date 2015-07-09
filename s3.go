@@ -15,26 +15,10 @@ func signatureS3(stringToSign string, keys Credentials) string {
 }
 
 func stringToSignS3(request *http.Request) string {
+	// This is a hack to work for presigning urls for browsers that don't set the date header
 	str := request.Method + "\n"
-
-	if request.Header.Get("Content-Md5") != "" {
-		str += request.Header.Get("Content-Md5")
-	} else {
-		body := readAndReplaceBody(request)
-		if len(body) > 0 {
-			str += hashMD5(body)
-		}
-	}
-	str += "\n"
-
+	str += request.Header.Get("Content-Md5") + "\n"
 	str += request.Header.Get("Content-Type") + "\n"
-
-	if request.Header.Get("Date") != "" {
-		str += request.Header.Get("Date")
-	} else {
-		str += timestampS3()
-	}
-
 	str += "\n"
 
 	canonicalHeaders := canonicalAmzHeadersS3(request)
@@ -87,12 +71,14 @@ func canonicalResourceS3(request *http.Request) string {
 	}
 
 	res += request.URL.Path
+	//TODO: This is a hack
+	res += "?" + req.URL.RawQuery
 
-	for _, subres := range strings.Split(subresourcesS3, ",") {
-		if strings.HasPrefix(request.URL.RawQuery, subres) {
-			res += "?" + subres
-		}
-	}
+	// for _, subres := range strings.Split(subresourcesS3, ",") {
+	// 	if strings.HasPrefix(request.URL.RawQuery, subres) {
+	// 		res += "?" + subres
+	// 	}
+	// }
 
 	return res
 }
