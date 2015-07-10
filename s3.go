@@ -72,7 +72,7 @@ func canonicalResourceS3(request *http.Request) string {
 
 	res += request.URL.Path
 	//TODO: This is a hack
-	res += "?" + req.URL.RawQuery
+	res += "?" + request.URL.RawQuery
 
 	// for _, subres := range strings.Split(subresourcesS3, ",") {
 	// 	if strings.HasPrefix(request.URL.RawQuery, subres) {
