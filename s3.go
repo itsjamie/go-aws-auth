@@ -19,7 +19,12 @@ func stringToSignS3(request *http.Request) string {
 	str := request.Method + "\n"
 	str += request.Header.Get("Content-Md5") + "\n"
 	str += request.Header.Get("Content-Type") + "\n"
-	str += "\n"
+
+	if date := request.Header.Get("x-amz-date") != "" {
+		str += date + "\n"
+	} else {
+		str += request.Header.Get("Date") + "\n"
+	}
 
 	canonicalHeaders := canonicalAmzHeadersS3(request)
 	if canonicalHeaders != "" {
