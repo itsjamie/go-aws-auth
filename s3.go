@@ -21,7 +21,7 @@ func stringToSignS3(request *http.Request) string {
 	str += request.Header.Get("Content-Type") + "\n"
 
 	if date := request.Header.Get("x-amz-date"); date != "" {
-		str += date + "\n"
+		str += "\n"
 	} else {
 		str += request.Header.Get("Date") + "\n"
 	}
