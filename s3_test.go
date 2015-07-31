@@ -10,6 +10,44 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestStringToSign(t *testing.T) {
+	expectedSTS := "PUT\n\nmultipart/form-data\n\nx-amz-date:Fri, 31 Jul 2015 13:51:58 -0300\n/testbucket/test.mp4?partNumber=1&uploadId=xms_7xoPnE3BgXeNEQLf.VU_N2Sm"
+
+	req, _ := http.NewRequest("PUT", "https://s3.amazonaws.com/testbucket/test.mp4?partNumber=1&uploadId=xms_7xoPnE3BgXeNEQLf.VU_N2Sm", nil)
+	req.Header.Set("Content-Type", "multipart/form-data")
+	req.Header.Set("x-amz-date", "Fri, 31 Jul 2015 13:51:58 -0300")
+	actualSTS := stringToSignS3(req)
+	if expectedSTS != actualSTS {
+		fmt.Printf("Expected: %s\nActual: %s\n", expectedSTS, actualSTS)
+		t.Fatal("Mismatch STS.")
+	}
+}
+
+func TestEncryption(t *testing.T) {
+	expectSTS := "GET\n\n\nFri, 05 May 2006 17:36:09 +0000\n/testbucket/testkey"
+	expectSignature := "6fULxJnmQJMsN4SUgFj1VU5Z7Vs="
+
+	reqTime, _ := time.Parse(time.RFC1123Z, "Fri, 05 May 2006 17:36:09 +0000")
+
+	req, _ := http.NewRequest("GET", "https://s3.amazonaws.com/testbucket/testkey", nil)
+	req.Header.Set("Date", reqTime.Format(timeFormatS3))
+	actualSTS := stringToSignS3(req)
+	if expectSTS != actualSTS {
+		fmt.Printf("Expected STS: %s\nActual STS: %s", expectSTS, actualSTS)
+		t.Fatal("Mismatch STS.")
+	}
+
+	actualSignature := signatureS3(actualSTS, Credentials{
+		AccessKeyID:     "test",
+		SecretAccessKey: "fake-secret-key",
+	})
+
+	if expectSignature != actualSignature {
+		fmt.Printf("Expected Signature: %s\nActual Signature: %s\n", expectSignature, actualSignature)
+		t.Fatal("Mismatch Signature")
+	}
+}
+
 func TestSignatureS3(t *testing.T) {
 	// http://docs.aws.amazon.com/AmazonS3/2006-03-01/dev/RESTAuthentication.html
 	// Note: S3 now supports signed signature version 4
@@ -42,11 +80,13 @@ func TestSignatureS3(t *testing.T) {
 		})
 
 		Convey("The string to sign should be correct", func() {
+			prepareRequestS3(request)
 			actual := stringToSignS3(request)
 			So(actual, ShouldEqual, expectedStringToSignS3)
 		})
 
 		Convey("The final signature string should be exactly correct", func() {
+			prepareRequestS3(request)
 			actual := signatureS3(stringToSignS3(request), keys)
 			So(actual, ShouldEqual, "bWq2s1WEIj+Ydj0vQ697zp+IXMU=")
 		})

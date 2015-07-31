@@ -1,6 +1,8 @@
 package awsauth
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
 	"encoding/base64"
 	"net/http"
 	"sort"
@@ -10,8 +12,11 @@ import (
 )
 
 func signatureS3(stringToSign string, keys Credentials) string {
-	hashed := hmacSHA1([]byte(keys.SecretAccessKey), stringToSign)
-	return base64.StdEncoding.EncodeToString(hashed)
+	hash := hmac.New(sha1.New, []byte(keys.SecretAccessKey))
+	hash.Write([]byte(stringToSign))
+	signature := make([]byte, base64.StdEncoding.EncodedLen(hash.Size()))
+	base64.StdEncoding.Encode(signature, hash.Sum(nil))
+	return string(signature)
 }
 
 func stringToSignS3(request *http.Request) string {
@@ -20,7 +25,7 @@ func stringToSignS3(request *http.Request) string {
 	str += request.Header.Get("Content-Md5") + "\n"
 	str += request.Header.Get("Content-Type") + "\n"
 
-	if date := request.Header.Get("x-amz-date"); date != "" {
+	if request.Header.Get("x-amz-date") != "" {
 		str += "\n"
 	} else {
 		str += request.Header.Get("Date") + "\n"
@@ -77,7 +82,9 @@ func canonicalResourceS3(request *http.Request) string {
 
 	res += request.URL.Path
 	//TODO: This is a hack
-	res += "?" + request.URL.RawQuery
+	if request.URL.RawQuery != "" {
+		res += "?" + request.URL.RawQuery
+	}
 
 	// for _, subres := range strings.Split(subresourcesS3, ",") {
 	// 	if strings.HasPrefix(request.URL.RawQuery, subres) {
