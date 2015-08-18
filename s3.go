@@ -80,7 +80,7 @@ func canonicalResourceS3(request *http.Request) string {
 		res += "/" + bucketname
 	}
 
-	res += request.URL.Path
+	res += normuri(request.URL.Path)
 	//TODO: This is a hack
 	if request.URL.RawQuery != "" {
 		res += "?" + request.URL.RawQuery

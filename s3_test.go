@@ -11,11 +11,11 @@ import (
 )
 
 func TestStringToSign(t *testing.T) {
-	expectedSTS := "PUT\n\nmultipart/form-data\n\nx-amz-date:Fri, 31 Jul 2015 13:51:58 -0300\n/testbucket/test.mp4?partNumber=1&uploadId=xms_7xoPnE3BgXeNEQLf.VU_N2Sm"
+	expectedSTS := "PUT\n\nmultipart/form-data\n\nx-amz-date:Tue, 18 Aug 2015 13:24:59 +0000\n/test/test%20example%21.mov?partNumber=6&uploadId=L.zWKOtX7Ul9dMW9uE9plt0qmF3lre2KCzbe2yojX_GH772Wxac1eLKIkNxs3HlgRRnqikMinf99b8DukPvssneZ2c1q4.aBao9yBvB_rG6fOWXS0WE1_aR2LrXsqKGm"
 
-	req, _ := http.NewRequest("PUT", "https://s3.amazonaws.com/testbucket/test.mp4?partNumber=1&uploadId=xms_7xoPnE3BgXeNEQLf.VU_N2Sm", nil)
+	req, _ := http.NewRequest("PUT", "https://s3.amazonaws.com/test/test%20example%21.mov?partNumber=6&uploadId=L.zWKOtX7Ul9dMW9uE9plt0qmF3lre2KCzbe2yojX_GH772Wxac1eLKIkNxs3HlgRRnqikMinf99b8DukPvssneZ2c1q4.aBao9yBvB_rG6fOWXS0WE1_aR2LrXsqKGm", nil)
 	req.Header.Set("Content-Type", "multipart/form-data")
-	req.Header.Set("x-amz-date", "Fri, 31 Jul 2015 13:51:58 -0300")
+	req.Header.Set("x-amz-date", "Tue, 18 Aug 2015 13:24:59 +0000")
 	actualSTS := stringToSignS3(req)
 	if expectedSTS != actualSTS {
 		fmt.Printf("Expected: %s\nActual: %s\n", expectedSTS, actualSTS)
